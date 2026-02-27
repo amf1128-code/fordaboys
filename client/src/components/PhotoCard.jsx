@@ -19,7 +19,7 @@ export default function PhotoCard({ photo, currentUserId, onReact }) {
           {new Date(photo.createdAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}
         </span>
       </div>
-      <img src={`/uploads/${photo.filename}`} alt={photo.caption || 'Photo'} loading="lazy" />
+      <img src={photo.photoUrl} alt={photo.caption || 'Photo'} loading="lazy" />
       {photo.caption && <div className="photo-card-caption">{photo.caption}</div>}
       <div className="photo-card-reactions">
         {QUICK_REACTIONS.map((emoji) => {

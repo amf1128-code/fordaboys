@@ -1,15 +1,12 @@
 {
   "name": "fordaboys",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "Hourly photo challenge app for the boys",
   "private": true,
   "scripts": {
-    "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
-    "dev:server": "cd server && node index.js",
-    "dev:client": "cd client && npm run dev",
+    "dev": "npx netlify dev",
     "build": "cd client && npm run build",
-    "start": "cd server && NODE_ENV=production node index.js",
-    "install:all": "npm install && cd server && npm install && cd ../client && npm install"
+    "install:all": "npm install && cd client && npm install && cd ../netlify/functions && npm install"
   },
   "repository": {
     "type": "git",
@@ -19,6 +16,6 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "concurrently": "^8.2.0"
+    "netlify-cli": "^17.0.0"
   }
 }
