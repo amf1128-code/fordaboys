@@ -68,3 +68,5 @@ export const unsubscribePush = (userId) =>
     method: 'POST',
     body: JSON.stringify({ userId }),
   });
+export const sendHourlyPing = () =>
+  request('/notifications/send-hourly', { method: 'POST' });

@@ -1,6 +1,7 @@
 import express from 'express';
 import serverless from 'serverless-http';
 import { createClient } from '@supabase/supabase-js';
+import webPush from 'web-push';
 import { v4 as uuidv4 } from 'uuid';
 
 // --- Supabase ---
@@ -333,6 +334,55 @@ app.post('/api/notifications/unsubscribe', async (req, res) => {
     .eq('id', userId);
 
   res.json({ success: true });
+});
+
+// Send push to all subscribed users (same logic as hourly-ping scheduled function)
+app.post('/api/notifications/send-hourly', async (_req, res) => {
+  webPush.setVapidDetails(
+    process.env.VAPID_EMAIL || 'mailto:fordaboys@example.com',
+    process.env.VAPID_PUBLIC_KEY,
+    process.env.VAPID_PRIVATE_KEY
+  );
+
+  const { data: users } = await supabase
+    .from('users')
+    .select('id, name, push_subscription')
+    .not('push_subscription', 'is', null);
+
+  if (!users || users.length === 0) {
+    return res.json({ sent: 0, message: 'No users with push subscriptions' });
+  }
+
+  const payload = JSON.stringify({
+    title: "IT'S GO TIME",
+    body: 'New hour, new photo. Send it for the boys.',
+    icon: '/icon-192.png',
+    tag: 'hourly-challenge',
+  });
+
+  let sent = 0;
+  let expired = 0;
+  let failed = 0;
+
+  for (const user of users) {
+    try {
+      await webPush.sendNotification(user.push_subscription, payload);
+      sent++;
+    } catch (err) {
+      if (err.statusCode === 410 || err.statusCode === 404) {
+        await supabase
+          .from('users')
+          .update({ push_subscription: null })
+          .eq('id', user.id);
+        expired++;
+      } else {
+        console.error(`Push failed for ${user.name}:`, err.message);
+        failed++;
+      }
+    }
+  }
+
+  res.json({ sent, expired, failed });
 });
 
 // ========== Helpers ==========

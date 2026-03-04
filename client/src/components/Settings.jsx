@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
-import { getVapidKey, subscribePush, unsubscribePush, deleteAccount } from '../api';
+import { getVapidKey, subscribePush, unsubscribePush, deleteAccount, sendHourlyPing } from '../api';
 import { urlBase64ToUint8Array } from '../lib/utils';
 
 export default function Settings({ user, onLogout, onAccountDeleted }) {
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
   const [notifLoading, setNotifLoading] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [testSent, setTestSent] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
@@ -88,6 +89,26 @@ export default function Settings({ user, onLogout, onAccountDeleted }) {
             {notifLoading ? '...' : notificationsEnabled ? 'On' : 'Off'}
           </button>
         </div>
+        {notificationsEnabled && (
+          <div className="settings-row" style={{ paddingTop: 0 }}>
+            <span style={{ fontSize: 13, color: 'var(--text-dim)' }}>Test notification</span>
+            <button
+              className="btn btn-small btn-outline"
+              disabled={testSent}
+              onClick={async () => {
+                try {
+                  await sendHourlyPing();
+                  setTestSent(true);
+                  setTimeout(() => setTestSent(false), 5000);
+                } catch (err) {
+                  alert('Failed to send: ' + err.message);
+                }
+              }}
+            >
+              {testSent ? 'Sent!' : 'Send'}
+            </button>
+          </div>
+        )}
       </div>
 
       <div className="settings-section">
