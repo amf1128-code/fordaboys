@@ -95,7 +95,7 @@ function App() {
         />
       )}
       {tab === 'scores' && <Scoreboard />}
-      {tab === 'settings' && <Settings user={user} onLogout={handleLogout} />}
+      {tab === 'settings' && <Settings user={user} onLogout={handleLogout} onAccountDeleted={handleLogout} />}
 
       <nav className="nav">
         <button className={tab === 'feed' ? 'active' : ''} onClick={() => setTab('feed')}>

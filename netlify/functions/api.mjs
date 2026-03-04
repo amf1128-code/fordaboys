@@ -59,6 +59,38 @@ app.get('/api/auth/users', async (_req, res) => {
   res.json({ users: (data || []).map(formatUser) });
 });
 
+app.delete('/api/auth/account/:userId', async (req, res) => {
+  const { userId } = req.params;
+
+  // Delete reactions by this user
+  await supabase.from('reactions').delete().eq('user_id', userId);
+
+  // Get user's photos to delete from storage
+  const { data: photos } = await supabase
+    .from('photos')
+    .select('id, storage_path')
+    .eq('user_id', userId);
+
+  if (photos && photos.length > 0) {
+    // Delete reactions on this user's photos
+    const photoIds = photos.map((p) => p.id);
+    await supabase.from('reactions').delete().in('photo_id', photoIds);
+
+    // Delete photos from storage
+    const paths = photos.map((p) => p.storage_path);
+    await supabase.storage.from('photos').remove(paths);
+
+    // Delete photo records
+    await supabase.from('photos').delete().eq('user_id', userId);
+  }
+
+  // Delete user
+  const { error } = await supabase.from('users').delete().eq('id', userId);
+  if (error) return res.status(500).json({ error: error.message });
+
+  res.json({ success: true });
+});
+
 // ========== PHOTOS ==========
 
 app.post('/api/photos', async (req, res) => {

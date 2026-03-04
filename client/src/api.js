@@ -19,6 +19,8 @@ export const join = (name) =>
 export const login = (joinCode) =>
   request('/auth/login', { method: 'POST', body: JSON.stringify({ joinCode }) });
 export const getUsers = () => request('/auth/users');
+export const deleteAccount = (userId) =>
+  request(`/auth/account/${userId}`, { method: 'DELETE' });
 
 // Photos — upload file directly to Supabase Storage, then save metadata via API
 export const uploadPhoto = async (userId, file, caption) => {
