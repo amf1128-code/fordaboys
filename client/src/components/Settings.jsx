@@ -49,7 +49,7 @@ export default function Settings({ user, onLogout, onAccountDeleted }) {
       }
     } catch (err) {
       console.error('Notification toggle failed:', err);
-      alert('Failed to toggle notifications. Make sure you allowed notifications for this site.');
+      alert('Failed to toggle notifications: ' + (err.message || 'Unknown error'));
     } finally {
       setNotifLoading(false);
     }
