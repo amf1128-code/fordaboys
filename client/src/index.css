@@ -133,6 +133,162 @@ body {
 .input:focus { border-color: var(--accent); }
 .input::placeholder { color: var(--text-dim); }
 
+/* --- Onboarding --- */
+.onboarding {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 48px 32px 32px;
+  gap: 16px;
+  text-align: center;
+}
+.onboarding h1 {
+  font-size: 28px;
+  font-weight: 900;
+  letter-spacing: -0.5px;
+}
+.onboarding > p {
+  color: var(--text-dim);
+  line-height: 1.5;
+  font-size: 15px;
+}
+
+.onboarding-steps {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.step-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--bg-input);
+}
+.step-dot.active {
+  background: var(--accent);
+  width: 24px;
+  border-radius: 4px;
+}
+.step-dot.done {
+  background: var(--success);
+}
+
+.onboarding-choices {
+  display: flex;
+  gap: 16px;
+  width: 100%;
+  margin-top: 16px;
+}
+.phone-choice {
+  flex: 1;
+  background: var(--bg-card);
+  border: 2px solid transparent;
+  border-radius: var(--radius);
+  padding: 28px 16px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  transition: border-color 0.15s;
+}
+.phone-choice:hover, .phone-choice:active {
+  border-color: var(--accent);
+}
+.phone-icon svg {
+  width: 48px;
+  height: 48px;
+  color: var(--text);
+}
+.phone-label {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.onboarding-instructions {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 8px;
+}
+.instruction-step {
+  background: var(--bg-card);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  text-align: left;
+  font-size: 14px;
+  line-height: 1.4;
+}
+.instruction-num {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+.share-icon {
+  width: 18px;
+  height: 18px;
+  display: inline-block;
+  vertical-align: middle;
+  margin: 0 2px;
+}
+
+.onboarding-card {
+  background: var(--bg-card);
+  border-radius: var(--radius);
+  padding: 32px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 8px 0;
+}
+.check-circle {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--success);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.onboarding-actions {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
+  margin-top: 8px;
+}
+.btn-link {
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  font-size: 14px;
+  cursor: pointer;
+  padding: 8px;
+}
+.btn-link:hover {
+  color: var(--text);
+}
+
 /* --- Auth Screen --- */
 .auth-screen {
   flex: 1;

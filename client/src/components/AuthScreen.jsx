@@ -15,7 +15,7 @@ export default function AuthScreen({ onLogin }) {
     try {
       const { user } = await join(name);
       localStorage.setItem('fordaboys_user', JSON.stringify(user));
-      onLogin(user);
+      onLogin(user, true);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -30,7 +30,7 @@ export default function AuthScreen({ onLogin }) {
     try {
       const { user } = await login(code);
       localStorage.setItem('fordaboys_user', JSON.stringify(user));
-      onLogin(user);
+      onLogin(user, false);
     } catch (err) {
       setError(err.message);
     } finally {
