@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { login } from './api';
 import AuthScreen from './components/AuthScreen';
 import OnboardingScreen from './components/OnboardingScreen';
 import Feed from './components/Feed';
@@ -15,12 +16,25 @@ function App() {
   const [countdown, setCountdown] = useState('');
   const [toast, setToast] = useState('');
 
-  // Load saved user
+  // Load saved user and validate session still exists in DB
   useEffect(() => {
     const saved = localStorage.getItem('fordaboys_user');
-    if (saved) {
-      try { setUser(JSON.parse(saved)); } catch { /* ignore */ }
-    }
+    if (!saved) return;
+    try {
+      const parsed = JSON.parse(saved);
+      setUser(parsed);
+      // Verify user still exists by re-logging in with their join code
+      if (parsed.joinCode) {
+        login(parsed.joinCode).then(({ user: fresh }) => {
+          setUser(fresh);
+          localStorage.setItem('fordaboys_user', JSON.stringify(fresh));
+        }).catch(() => {
+          // User no longer exists in DB — clear stale session
+          localStorage.removeItem('fordaboys_user');
+          setUser(null);
+        });
+      }
+    } catch { /* ignore */ }
   }, []);
 
   // Register service worker

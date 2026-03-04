@@ -11,6 +11,13 @@ export const config = {
 };
 
 export default async function handler() {
+  // Skip notifications during quiet hours (11 PM – 9 AM EST / 4 AM – 2 PM UTC)
+  const utcHour = new Date().getUTCHours();
+  if (utcHour >= 4 && utcHour < 14) {
+    console.log(`[${new Date().toISOString()}] Quiet hours (11 PM–9 AM EST), skipping.`);
+    return;
+  }
+
   console.log(`[${new Date().toISOString()}] Sending hourly photo challenge ping...`);
 
   webPush.setVapidDetails(
