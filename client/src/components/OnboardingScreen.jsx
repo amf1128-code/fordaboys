@@ -1,14 +1,6 @@
 import { useState, useEffect } from 'react';
 import { getVapidKey, subscribePush } from '../api';
-
-function urlBase64ToUint8Array(base64String) {
-  const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
-  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
-  const raw = window.atob(base64);
-  const arr = new Uint8Array(raw.length);
-  for (let i = 0; i < raw.length; i++) arr[i] = raw.charCodeAt(i);
-  return arr;
-}
+import { urlBase64ToUint8Array } from '../lib/utils';
 
 export default function OnboardingScreen({ user, onComplete }) {
   const [step, setStep] = useState('phone'); // phone | joincode | homescreen | notifications

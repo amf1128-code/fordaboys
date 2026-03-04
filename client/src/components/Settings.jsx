@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { getVapidKey, subscribePush, unsubscribePush, deleteAccount } from '../api';
+import { urlBase64ToUint8Array } from '../lib/utils';
 
 export default function Settings({ user, onLogout, onAccountDeleted }) {
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
@@ -137,7 +138,7 @@ export default function Settings({ user, onLogout, onAccountDeleted }) {
                 onClick={async () => {
                   setDeleting(true);
                   try {
-                    await deleteAccount(user.id);
+                    await deleteAccount(user.id, user.joinCode);
                     localStorage.removeItem('fordaboys_user');
                     onAccountDeleted();
                   } catch (err) {
@@ -154,15 +155,4 @@ export default function Settings({ user, onLogout, onAccountDeleted }) {
       </div>
     </div>
   );
-}
-
-function urlBase64ToUint8Array(base64String) {
-  const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
-  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
-  const raw = window.atob(base64);
-  const arr = new Uint8Array(raw.length);
-  for (let i = 0; i < raw.length; i++) {
-    arr[i] = raw.charCodeAt(i);
-  }
-  return arr;
 }

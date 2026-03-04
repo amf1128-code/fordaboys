@@ -12,6 +12,7 @@ export default function Camera({ user, onUploaded }) {
   const handleFile = (e) => {
     const f = e.target.files[0];
     if (!f) return;
+    if (preview) URL.revokeObjectURL(preview);
     setFile(f);
     setPreview(URL.createObjectURL(f));
     setError('');
@@ -26,6 +27,7 @@ export default function Camera({ user, onUploaded }) {
       if (result.error) {
         setError(result.error);
       } else {
+        if (preview) URL.revokeObjectURL(preview);
         setFile(null);
         setPreview(null);
         setCaption('');
@@ -39,6 +41,7 @@ export default function Camera({ user, onUploaded }) {
   };
 
   const reset = () => {
+    if (preview) URL.revokeObjectURL(preview);
     setFile(null);
     setPreview(null);
     setCaption('');
