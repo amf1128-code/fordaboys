@@ -1,10 +1,13 @@
 import { useState, useEffect } from 'react';
-import { getVapidKey, subscribePush, unsubscribePush } from '../api';
+import { getVapidKey, subscribePush, unsubscribePush, deleteAccount } from '../api';
+import { urlBase64ToUint8Array } from '../lib/utils';
 
-export default function Settings({ user, onLogout }) {
+export default function Settings({ user, onLogout, onAccountDeleted }) {
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
   const [notifLoading, setNotifLoading] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     // Check if notifications are already enabled
@@ -105,17 +108,51 @@ export default function Settings({ user, onLogout }) {
           Log out
         </button>
       </div>
+
+      <div className="settings-section">
+        {!deleteConfirm ? (
+          <button
+            className="btn-link"
+            style={{ color: 'var(--text-dim)', fontSize: 13 }}
+            onClick={() => setDeleteConfirm(true)}
+          >
+            Delete my account
+          </button>
+        ) : (
+          <div className="settings-row" style={{ flexDirection: 'column', gap: 12, alignItems: 'stretch' }}>
+            <p style={{ fontSize: 14, color: 'var(--danger)', fontWeight: 600 }}>
+              Are you sure? This deletes all your photos and data permanently.
+            </p>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button
+                className="btn btn-small btn-outline"
+                onClick={() => setDeleteConfirm(false)}
+                disabled={deleting}
+              >
+                Cancel
+              </button>
+              <button
+                className="btn btn-small"
+                style={{ background: 'var(--danger)' }}
+                disabled={deleting}
+                onClick={async () => {
+                  setDeleting(true);
+                  try {
+                    await deleteAccount(user.id, user.joinCode);
+                    localStorage.removeItem('fordaboys_user');
+                    onAccountDeleted();
+                  } catch (err) {
+                    alert('Failed to delete account: ' + err.message);
+                    setDeleting(false);
+                  }
+                }}
+              >
+                {deleting ? 'Deleting...' : 'Yes, delete everything'}
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
-}
-
-function urlBase64ToUint8Array(base64String) {
-  const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
-  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
-  const raw = window.atob(base64);
-  const arr = new Uint8Array(raw.length);
-  for (let i = 0; i < raw.length; i++) {
-    arr[i] = raw.charCodeAt(i);
-  }
-  return arr;
 }

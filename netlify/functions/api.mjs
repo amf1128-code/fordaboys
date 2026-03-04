@@ -1,7 +1,6 @@
 import express from 'express';
 import serverless from 'serverless-http';
 import { createClient } from '@supabase/supabase-js';
-import webPush from 'web-push';
 import { v4 as uuidv4 } from 'uuid';
 
 // --- Supabase ---
@@ -25,6 +24,9 @@ app.post('/api/auth/join', async (req, res) => {
   const { name } = req.body;
   if (!name || name.trim().length === 0) {
     return res.status(400).json({ error: 'Name is required' });
+  }
+  if (name.trim().length > 30) {
+    return res.status(400).json({ error: 'Name must be 30 characters or less' });
   }
 
   const joinCode = uuidv4().slice(0, 8).toUpperCase();
@@ -56,7 +58,51 @@ app.post('/api/auth/login', async (req, res) => {
 
 app.get('/api/auth/users', async (_req, res) => {
   const { data } = await supabase.from('users').select().order('created_at');
-  res.json({ users: (data || []).map(formatUser) });
+  res.json({ users: (data || []).map(formatUserPublic) });
+});
+
+app.delete('/api/auth/account/:userId', async (req, res) => {
+  const { userId } = req.params;
+  const { joinCode } = req.body || {};
+
+  // Verify the requester owns this account
+  const { data: owner } = await supabase
+    .from('users')
+    .select('join_code')
+    .eq('id', userId)
+    .single();
+
+  if (!owner || !joinCode || owner.join_code !== joinCode.trim().toUpperCase()) {
+    return res.status(403).json({ error: 'Unauthorized' });
+  }
+
+  // Delete reactions by this user
+  await supabase.from('reactions').delete().eq('user_id', userId);
+
+  // Get user's photos to delete from storage
+  const { data: photos } = await supabase
+    .from('photos')
+    .select('id, storage_path')
+    .eq('user_id', userId);
+
+  if (photos && photos.length > 0) {
+    // Delete reactions on this user's photos
+    const photoIds = photos.map((p) => p.id);
+    await supabase.from('reactions').delete().in('photo_id', photoIds);
+
+    // Delete photos from storage
+    const paths = photos.map((p) => p.storage_path);
+    await supabase.storage.from('photos').remove(paths);
+
+    // Delete photo records
+    await supabase.from('photos').delete().eq('user_id', userId);
+  }
+
+  // Delete user
+  const { error } = await supabase.from('users').delete().eq('id', userId);
+  if (error) return res.status(500).json({ error: error.message });
+
+  res.json({ success: true });
 });
 
 // ========== PHOTOS ==========
@@ -65,6 +111,9 @@ app.post('/api/photos', async (req, res) => {
   const { userId, storagePath, caption } = req.body;
   if (!userId || !storagePath) {
     return res.status(400).json({ error: 'userId and storagePath are required' });
+  }
+  if (caption && caption.length > 200) {
+    return res.status(400).json({ error: 'Caption must be 200 characters or less' });
   }
 
   const { data: user } = await supabase.from('users').select().eq('id', userId).single();
@@ -168,6 +217,9 @@ app.post('/api/photos/:photoId/react', async (req, res) => {
   const { photoId } = req.params;
   if (!userId || !emoji) {
     return res.status(400).json({ error: 'userId and emoji are required' });
+  }
+  if (emoji.length > 8) {
+    return res.status(400).json({ error: 'Invalid emoji' });
   }
 
   // Try insert, if duplicate constraint → delete (toggle)
@@ -291,6 +343,15 @@ function formatUser(u) {
     name: u.name,
     avatarColor: u.avatar_color,
     joinCode: u.join_code,
+    createdAt: u.created_at,
+  };
+}
+
+function formatUserPublic(u) {
+  return {
+    id: u.id,
+    name: u.name,
+    avatarColor: u.avatar_color,
     createdAt: u.created_at,
   };
 }

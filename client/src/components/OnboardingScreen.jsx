@@ -1,17 +1,9 @@
 import { useState, useEffect } from 'react';
 import { getVapidKey, subscribePush } from '../api';
-
-function urlBase64ToUint8Array(base64String) {
-  const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
-  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
-  const raw = window.atob(base64);
-  const arr = new Uint8Array(raw.length);
-  for (let i = 0; i < raw.length; i++) arr[i] = raw.charCodeAt(i);
-  return arr;
-}
+import { urlBase64ToUint8Array } from '../lib/utils';
 
 export default function OnboardingScreen({ user, onComplete }) {
-  const [step, setStep] = useState('phone'); // phone | homescreen | notifications
+  const [step, setStep] = useState('phone'); // phone | joincode | homescreen | notifications
   const [phone, setPhone] = useState(null); // iphone | android
   const [isStandalone, setIsStandalone] = useState(false);
   const [notifStatus, setNotifStatus] = useState('idle'); // idle | loading | done | error
@@ -26,7 +18,7 @@ export default function OnboardingScreen({ user, onComplete }) {
 
   const handlePhoneSelect = (type) => {
     setPhone(type);
-    setStep('homescreen');
+    setStep('joincode');
   };
 
   const handleHomescreenDone = () => {
@@ -64,6 +56,7 @@ export default function OnboardingScreen({ user, onComplete }) {
           <span className="step-dot active" />
           <span className="step-dot" />
           <span className="step-dot" />
+          <span className="step-dot" />
         </div>
         <h1>What phone do you have?</h1>
         <p>We'll walk you through setting up the app</p>
@@ -91,11 +84,54 @@ export default function OnboardingScreen({ user, onComplete }) {
     );
   }
 
-  // ── Step 2: Add to home screen ──
+  // ── Step 2: Save your join code ──
+  if (step === 'joincode') {
+    return (
+      <div className="onboarding">
+        <div className="onboarding-steps">
+          <span className="step-dot done" />
+          <span className="step-dot active" />
+          <span className="step-dot" />
+          <span className="step-dot" />
+        </div>
+        <h1>Save your login code</h1>
+        <p>
+          This is how you log back in. No passwords, no email — just this code.
+        </p>
+        <div className="onboarding-card">
+          <span className="join-code" style={{ fontSize: 32, letterSpacing: 4 }}>
+            {user.joinCode}
+          </span>
+          <p style={{ color: 'var(--text-dim)', fontSize: 13, marginTop: 12, lineHeight: 1.5 }}>
+            If you lose access to the app, this code is the only way back in.
+          </p>
+        </div>
+        <div className="onboarding-instructions">
+          <div className="instruction-step">
+            <span className="instruction-num">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ width: 16, height: 16 }}>
+                <rect x="5" y="2" width="14" height="20" rx="2" />
+                <circle cx="12" cy="18" r="0.5" />
+              </svg>
+            </span>
+            <span><strong>Screenshot this screen now</strong> so you always have it</span>
+          </div>
+        </div>
+        <div className="onboarding-actions">
+          <button className="btn" onClick={() => setStep('homescreen')}>
+            I've saved it
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Step 3: Add to home screen ──
   if (step === 'homescreen') {
     return (
       <div className="onboarding">
         <div className="onboarding-steps">
+          <span className="step-dot done" />
           <span className="step-dot done" />
           <span className="step-dot active" />
           <span className="step-dot" />
@@ -176,10 +212,11 @@ export default function OnboardingScreen({ user, onComplete }) {
     );
   }
 
-  // ── Step 3: Enable notifications ──
+  // ── Step 4: Enable notifications ──
   return (
     <div className="onboarding">
       <div className="onboarding-steps">
+        <span className="step-dot done" />
         <span className="step-dot done" />
         <span className="step-dot done" />
         <span className="step-dot active" />
