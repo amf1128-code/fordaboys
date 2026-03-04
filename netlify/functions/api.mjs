@@ -318,10 +318,26 @@ app.post('/api/notifications/subscribe', async (req, res) => {
     return res.status(400).json({ error: 'userId and subscription required' });
   }
 
-  await supabase
+  const { error } = await supabase
     .from('users')
     .update({ push_subscription: subscription })
     .eq('id', userId);
+
+  if (error) {
+    console.error('Failed to save push subscription:', error.message);
+    return res.status(500).json({ error: 'Failed to save subscription: ' + error.message });
+  }
+
+  // Verify it was actually saved
+  const { data: check } = await supabase
+    .from('users')
+    .select('push_subscription')
+    .eq('id', userId)
+    .single();
+
+  if (!check?.push_subscription) {
+    return res.status(500).json({ error: 'Subscription was not saved — check that push_subscription column exists in users table' });
+  }
 
   res.json({ success: true });
 });

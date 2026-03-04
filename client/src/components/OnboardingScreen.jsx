@@ -7,6 +7,7 @@ export default function OnboardingScreen({ user, onComplete }) {
   const [phone, setPhone] = useState(null); // iphone | android
   const [isStandalone, setIsStandalone] = useState(false);
   const [notifStatus, setNotifStatus] = useState('idle'); // idle | loading | done | error
+  const [notifError, setNotifError] = useState('');
 
   useEffect(() => {
     // Detect if already running as installed PWA
@@ -27,9 +28,11 @@ export default function OnboardingScreen({ user, onComplete }) {
 
   const handleEnableNotifications = async () => {
     setNotifStatus('loading');
+    setNotifError('');
     try {
       const permission = await Notification.requestPermission();
       if (permission !== 'granted') {
+        setNotifError('Permission denied. Enable notifications in your browser settings.');
         setNotifStatus('error');
         return;
       }
@@ -44,6 +47,7 @@ export default function OnboardingScreen({ user, onComplete }) {
       setTimeout(onComplete, 1000);
     } catch (err) {
       console.error('Notification setup failed:', err);
+      setNotifError(err.message || 'Something went wrong. Try again.');
       setNotifStatus('error');
     }
   };
@@ -232,9 +236,9 @@ export default function OnboardingScreen({ user, onComplete }) {
 
       {notifStatus === 'error' && (
         <p style={{ color: 'var(--danger)', fontSize: 14 }}>
-          {phone === 'iphone'
+          {notifError || (phone === 'iphone'
             ? "Couldn't enable notifications. Make sure you added the app to your home screen and opened it from there."
-            : "Couldn't enable notifications. Check your browser settings and try again."}
+            : "Couldn't enable notifications. Check your browser settings and try again.")}
         </p>
       )}
 
