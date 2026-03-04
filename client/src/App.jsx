@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import AuthScreen from './components/AuthScreen';
+import OnboardingScreen from './components/OnboardingScreen';
 import Feed from './components/Feed';
 import Camera from './components/Camera';
 import Scoreboard from './components/Scoreboard';
@@ -9,6 +10,7 @@ const TABS = ['feed', 'camera', 'scores', 'settings'];
 
 function App() {
   const [user, setUser] = useState(null);
+  const [showOnboarding, setShowOnboarding] = useState(false);
   const [tab, setTab] = useState('feed');
   const [countdown, setCountdown] = useState('');
   const [toast, setToast] = useState('');
@@ -51,10 +53,26 @@ function App() {
     setUser(null);
   };
 
+  const handleLogin = (u, isNewUser) => {
+    setUser(u);
+    if (isNewUser) setShowOnboarding(true);
+  };
+
   if (!user) {
     return (
       <div className="app">
-        <AuthScreen onLogin={setUser} />
+        <AuthScreen onLogin={handleLogin} />
+      </div>
+    );
+  }
+
+  if (showOnboarding) {
+    return (
+      <div className="app">
+        <OnboardingScreen
+          user={user}
+          onComplete={() => setShowOnboarding(false)}
+        />
       </div>
     );
   }
