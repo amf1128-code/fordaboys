@@ -148,8 +148,10 @@ app.post('/api/photos', async (req, res) => {
 
   if (error) return res.status(500).json({ error: error.message });
 
-  // Send push notification to other subscribed users
-  try {
+  // Send push notification to other subscribed users (skip quiet hours: 11 PM – 9 AM EST)
+  const utcHour = new Date().getUTCHours();
+  const isQuietHours = utcHour >= 4 && utcHour < 14;
+  if (!isQuietHours) try {
     webPush.setVapidDetails(
       process.env.VAPID_EMAIL || 'mailto:fordaboys@example.com',
       process.env.VAPID_PUBLIC_KEY,
