@@ -318,25 +318,24 @@ app.post('/api/notifications/subscribe', async (req, res) => {
     return res.status(400).json({ error: 'userId and subscription required' });
   }
 
-  const { error } = await supabase
+  const { data: updated, error } = await supabase
     .from('users')
     .update({ push_subscription: subscription })
-    .eq('id', userId);
+    .eq('id', userId)
+    .select('id, push_subscription')
+    .single();
 
   if (error) {
     console.error('Failed to save push subscription:', error.message);
     return res.status(500).json({ error: 'Failed to save subscription: ' + error.message });
   }
 
-  // Verify it was actually saved
-  const { data: check } = await supabase
-    .from('users')
-    .select('push_subscription')
-    .eq('id', userId)
-    .single();
+  if (!updated) {
+    return res.status(404).json({ error: 'User not found — userId may be invalid' });
+  }
 
-  if (!check?.push_subscription) {
-    return res.status(500).json({ error: 'Subscription was not saved — check that push_subscription column exists in users table' });
+  if (!updated.push_subscription) {
+    return res.status(500).json({ error: 'Subscription column exists but value was not saved — check RLS policies on users table allow UPDATE for service role' });
   }
 
   res.json({ success: true });
