@@ -148,6 +148,43 @@ app.post('/api/photos', async (req, res) => {
 
   if (error) return res.status(500).json({ error: error.message });
 
+  // Send push notification to other subscribed users
+  try {
+    webPush.setVapidDetails(
+      process.env.VAPID_EMAIL || 'mailto:fordaboys@example.com',
+      process.env.VAPID_PUBLIC_KEY,
+      process.env.VAPID_PRIVATE_KEY
+    );
+
+    const { data: subscribers } = await supabase
+      .from('users')
+      .select('id, name, push_subscription')
+      .not('push_subscription', 'is', null)
+      .neq('id', userId);
+
+    const pushPayload = JSON.stringify({
+      title: `${user.name} sent one`,
+      body: caption || 'New photo just dropped. Go react.',
+      icon: '/icon-192.png',
+      tag: 'new-photo',
+    });
+
+    for (const sub of subscribers || []) {
+      try {
+        await webPush.sendNotification(sub.push_subscription, pushPayload);
+      } catch (err) {
+        if (err.statusCode === 410 || err.statusCode === 404) {
+          await supabase
+            .from('users')
+            .update({ push_subscription: null })
+            .eq('id', sub.id);
+        }
+      }
+    }
+  } catch (err) {
+    console.error('Failed to send photo notifications:', err.message);
+  }
+
   res.json({
     photo: {
       ...formatPhoto(photo),
@@ -165,7 +202,7 @@ app.get('/api/photos/feed', async (req, res) => {
     .from('photos')
     .select('*, users(name, avatar_color)')
     .order('challenge_hour', { ascending: false })
-    .order('created_at', { ascending: true })
+    .order('created_at', { ascending: false })
     .range(offset, offset + limit - 1);
 
   if (!photos || photos.length === 0) {
