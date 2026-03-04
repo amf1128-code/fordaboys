@@ -318,6 +318,18 @@ app.post('/api/notifications/subscribe', async (req, res) => {
     return res.status(400).json({ error: 'userId and subscription required' });
   }
 
+  // First verify the user exists
+  const { data: user, error: lookupError } = await supabase
+    .from('users')
+    .select('id')
+    .eq('id', userId)
+    .single();
+
+  if (lookupError || !user) {
+    console.error('Subscribe: user lookup failed', { userId, error: lookupError?.message });
+    return res.status(404).json({ error: `User not found for id: ${userId}` });
+  }
+
   const { data: updated, error } = await supabase
     .from('users')
     .update({ push_subscription: subscription })
@@ -330,12 +342,9 @@ app.post('/api/notifications/subscribe', async (req, res) => {
     return res.status(500).json({ error: 'Failed to save subscription: ' + error.message });
   }
 
-  if (!updated) {
-    return res.status(404).json({ error: 'User not found — userId may be invalid' });
-  }
-
-  if (!updated.push_subscription) {
-    return res.status(500).json({ error: 'Subscription column exists but value was not saved — check RLS policies on users table allow UPDATE for service role' });
+  if (!updated?.push_subscription) {
+    console.error('Subscribe: update returned but push_subscription is null', { updated });
+    return res.status(500).json({ error: 'Subscription was not saved. The update ran but the value is still null.' });
   }
 
   res.json({ success: true });
